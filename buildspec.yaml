@@ -23,7 +23,6 @@ phases:
 #      - IMAGE_REPO_NAME=aws-accounts-repo
 #      - echo img-repo-name $IMAGE_REPO_NAME
 #      - echo img-tag $IMAGE_TAG
-
   post_build:
     commands:
       - echo Tagging the Docker image...
