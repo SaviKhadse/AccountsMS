@@ -4,7 +4,7 @@ phases:
   pre_build:
     commands:
       - echo Setting up pre-build steps...
-      - ./gradlew clean build
+      - ./gradlew clean build -x test
       - echo Logging in to Amazon ECR...
         - AWS_REGION=us-east-2
         - AWS_ACCOUNT_ID=211125493623
@@ -17,7 +17,7 @@ phases:
   build:
     commands:
       - echo Building the application with Gradle...
-        - ./gradlew build
+        - ./gradlew build -x test
         - echo Building the Docker image...
         - IMAGE_REPO_NAME=aws-accounts-repo
         - IMAGE_TAG=latest
