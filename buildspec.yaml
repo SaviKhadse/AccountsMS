@@ -6,34 +6,33 @@ phases:
       - echo Setting up pre-build steps...
       - ./gradlew clean build -x test
       - echo Logging in to Amazon ECR...
-#      - AWS_REGION=us-east-2
-#      - AWS_ACCOUNT_ID=211125493623
-      - echo accountID- $AWS_ACCOUNT_ID
-      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 211125493623.dkr.ecr.us-east-2.amazonaws.com
-      - echo Granting execution permissions to Gradle wrapper...
-      - chmod +x ./gradlew
-      - echo Cleaning up previous builds...
-      - ./gradlew clean
+      - aws --version
+#      - echo accountID- $AWS_ACCOUNT_ID
+      - REPOSITORY_URI=211125493623.dkr.ecr.us-east-2.amazonaws.com/aws-accounts-repo
+      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin $REPOSITORY_URI
+      - COMMIT_HASH =$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG = build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
   build:
     commands:
       - echo Building the application with Gradle...
-      - ./gradlew build -x test
+#      - ./gradlew build -x test
       - echo Building the Docker image...
-      - IMAGE_REPO_NAME=aws-accounts-repo
-      - IMAGE_TAG=latest
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+#      - IMAGE_REPO_NAME=aws-accounts-repo
+#      - IMAGE_TAG=latest
 #      - echo img-repo-name $IMAGE_REPO_NAME
 #      - echo img-tag $IMAGE_TAG
-      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+
   post_build:
     commands:
       - echo Tagging the Docker image...
       - echo post-build img-repo $IMAGE_REPO_NAME
       - echo post-build accID 211125493623 and region us-east-2
-      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG 211125493623.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
       - echo Pushing the Docker image to AWS ECR...
-      - docker push 211125493623.dkr.ecr.us-east-2.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
-      - REPOSITORY_URI=211125493623.dkr.ecr.us-east-2.amazonaws.com/aws-accounts-repo
       - printf '[{"name":"accountms-service","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
       - echo Writing image definitions file...
       - # add your container name
@@ -45,4 +44,3 @@ artifacts:
   files:
     - imagedefinitions.json
     - build/libs/*.jar # Update the path if needed for your Gradle build output
-  discard-path: yes
