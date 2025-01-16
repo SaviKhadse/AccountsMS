@@ -11,7 +11,7 @@ phases:
       - REPOSITORY_URI=211125493623.dkr.ecr.us-east-2.amazonaws.com/aws-accounts-repo
       - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin $REPOSITORY_URI
 #      - COMMIT_HASH =$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG = build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+#      - IMAGE_TAG = build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
   build:
     commands:
       - echo Building the application with Gradle...
@@ -20,17 +20,17 @@ phases:
       - docker build -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
 #      - IMAGE_REPO_NAME=aws-accounts-repo
-#      - IMAGE_TAG=latest
+      - IMAGE_TAG=latest
 #      - echo img-repo-name $IMAGE_REPO_NAME
 #      - echo img-tag $IMAGE_TAG
 
   post_build:
     commands:
       - echo Tagging the Docker image...
-      - echo post-build img-repo $IMAGE_REPO_NAME
+#      - echo post-build img-repo $IMAGE_REPO_NAME
       - echo post-build accID 211125493623 and region us-east-2
       - echo Pushing the Docker image to AWS ECR...
-      - docker push $REPOSITORY_URI:latest
+#      - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
       - printf '[{"name":"accountms-service","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
